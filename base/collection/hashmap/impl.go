@@ -23,7 +23,7 @@ type SimpleHashmap[K comparable, E id.Identity[K]] struct {
 func (s *SimpleHashmap[K, E]) Element(id K) (*E, error) {
 	e, exists := s.storage[id]
 	if !exists {
-		return nil, fmt.Errorf("element not found")
+		return nil, fmt.Errorf(cl.ErrElementNotFound)
 	}
 	return &e, nil
 }
@@ -40,7 +40,7 @@ func (s *SimpleHashmap[K, E]) RemoveById(id K) error {
 	defer s.mutex.Unlock()
 
 	if !s.HasElementById(id) {
-		return fmt.Errorf("element not found")
+		return fmt.Errorf(cl.ErrElementNotFound)
 	}
 
 	delete(s.storage, id)
@@ -53,7 +53,7 @@ func (s *SimpleHashmap[K, E]) Add(e E) error {
 	defer s.mutex.Unlock()
 
 	if !s.HasElement(e) {
-		return fmt.Errorf("element exists")
+		return fmt.Errorf(cl.ErrElementExists)
 	}
 
 	s.storage[e.Id()] = e
