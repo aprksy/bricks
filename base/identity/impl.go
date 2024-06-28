@@ -2,9 +2,9 @@ package identity
 
 import "fmt"
 
-var _ Identity[int] = (*SimpleIdentity[int])(nil)
+var _ Identity[uint] = (*SimpleIdentity[uint])(nil)
 
-func NewSimpleIdentity[T comparable](id T, typeName string, onInfo func(t string, id T) string) *SimpleIdentity[T] {
+func NewSimpleIdentity[T IDType](id T, typeName string, onInfo func(t string, id T) string) *SimpleIdentity[T] {
 	return &SimpleIdentity[T]{
 		id:       id,
 		typeName: typeName,
@@ -12,7 +12,7 @@ func NewSimpleIdentity[T comparable](id T, typeName string, onInfo func(t string
 	}
 }
 
-type SimpleIdentity[T comparable] struct {
+type SimpleIdentity[T IDType] struct {
 	id       T
 	typeName string
 	onInfo   func(t string, id T) string
