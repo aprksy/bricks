@@ -9,18 +9,18 @@ import (
 )
 
 var (
-	_ cl.Collection[int, *id.SimpleIdentity[int]] = (*SimpleHashmap[int, *id.SimpleIdentity[int]])(nil)
-	_ Hashmap[int, *id.SimpleIdentity[int]]       = (*SimpleHashmap[int, *id.SimpleIdentity[int]])(nil)
+	_ cl.Collection[uint, *id.SimpleIdentity[uint]] = (*SimpleHashmap[uint, *id.SimpleIdentity[uint]])(nil)
+	_ Hashmap[uint, *id.SimpleIdentity[uint]]       = (*SimpleHashmap[uint, *id.SimpleIdentity[uint]])(nil)
 )
 
-func NewSimpleHashmap[K comparable, E id.Identity[K]](oid K) *SimpleHashmap[K, E] {
+func NewSimpleHashmap[K id.IDType, E id.Identity[K]](oid K) *SimpleHashmap[K, E] {
 	return &SimpleHashmap[K, E]{
 		SimpleIdentity: id.NewSimpleIdentity[K](oid, "simple-hashmap", nil),
 		storage:        map[K]E{},
 	}
 }
 
-type SimpleHashmap[K comparable, E id.Identity[K]] struct {
+type SimpleHashmap[K id.IDType, E id.Identity[K]] struct {
 	*id.SimpleIdentity[K]
 	mutex   sync.Mutex
 	storage map[K]E
