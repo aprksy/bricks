@@ -57,3 +57,40 @@ func TestAdd(t *testing.T) {
 		})
 	}
 }
+
+func TestElement(t *testing.T) {
+	testCases := []struct {
+		name string
+		oid  int
+		err  error
+	}{
+		{name: "get element 1", oid: 1, err: nil},
+		{name: "get element 2", oid: 2, err: nil},
+		{name: "get element 3", oid: 3, err: fmt.Errorf(collection.ErrElementNotFound)},
+	}
+
+	instance := hashmap.NewSimpleHashmap[int, *identity.SimpleIdentity[int]](1)
+	for i, tc := range testCases {
+		if i == 2 {
+			break
+		}
+		instance.Add(identity.NewSimpleIdentity(tc.oid, "element-type", nil))
+	}
+
+	for i, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ptrE, err := instance.Element(tc.oid)
+			switch i {
+			case 0, 1:
+				assert.Nil(t, err, "err should be nil")
+				assert.NotNil(t, ptrE, "element should not be nil")
+				e := *ptrE
+				assert.Equal(t, e.Id(), tc.oid, fmt.Sprintf("Id() should equal %d", tc.oid))
+			default:
+				assert.Nil(t, ptrE, "element should be nil")
+				assert.NotNil(t, err, "err should not be nil")
+				assert.EqualError(t, err, collection.ErrElementNotFound, fmt.Sprintf("err should equal '%s'", tc.err.Error()))
+			}
+		})
+	}
+}
