@@ -13,7 +13,7 @@ import (
 func TestNewHashmap(t *testing.T) {
 	testCases := []struct {
 		name string
-		oid  int
+		oid  uint
 	}{
 		{name: "create hashmap 1", oid: 1},
 		{name: "create hashmap 2", oid: 2},
@@ -21,7 +21,7 @@ func TestNewHashmap(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			instance := hashmap.NewSimpleHashmap[int, *identity.SimpleIdentity[int]](tc.oid)
+			instance := hashmap.NewSimpleHashmap[uint, *identity.SimpleIdentity[uint]](tc.oid)
 
 			assert.NotNil(t, instance, "instance should not nil")
 			assert.NotNil(t, instance.SimpleIdentity, "instance's SimpleIdentity should not nil")
@@ -32,7 +32,7 @@ func TestNewHashmap(t *testing.T) {
 func TestAdd(t *testing.T) {
 	testCases := []struct {
 		name  string
-		oid   int
+		oid   uint
 		err   error
 		count int
 	}{
@@ -41,7 +41,7 @@ func TestAdd(t *testing.T) {
 		{name: "add element 2", oid: 2, err: fmt.Errorf(collection.ErrElementExists), count: 2},
 	}
 
-	instance := hashmap.NewSimpleHashmap[int, *identity.SimpleIdentity[int]](1)
+	instance := hashmap.NewSimpleHashmap[uint, *identity.SimpleIdentity[uint]](1)
 	for i, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := instance.Add(identity.NewSimpleIdentity(tc.oid, "element-type", nil))
@@ -61,7 +61,7 @@ func TestAdd(t *testing.T) {
 func TestElement(t *testing.T) {
 	testCases := []struct {
 		name string
-		oid  int
+		oid  uint
 		err  error
 	}{
 		{name: "get element 1", oid: 1, err: nil},
@@ -69,7 +69,7 @@ func TestElement(t *testing.T) {
 		{name: "get element 3", oid: 3, err: fmt.Errorf(collection.ErrElementNotFound)},
 	}
 
-	instance := hashmap.NewSimpleHashmap[int, *identity.SimpleIdentity[int]](1)
+	instance := hashmap.NewSimpleHashmap[uint, *identity.SimpleIdentity[uint]](1)
 	for i, tc := range testCases {
 		if i == 2 {
 			break
@@ -98,7 +98,7 @@ func TestElement(t *testing.T) {
 func TestRemove(t *testing.T) {
 	testCases := []struct {
 		name string
-		oid  int
+		oid  uint
 		err  error
 	}{
 		{name: "rm element 1", oid: 1, err: nil},
@@ -106,8 +106,8 @@ func TestRemove(t *testing.T) {
 		{name: "rm element 3", oid: 3, err: fmt.Errorf(collection.ErrElementNotFound)},
 	}
 
-	instance := hashmap.NewSimpleHashmap[int, *identity.SimpleIdentity[int]](1)
-	elements := []*identity.SimpleIdentity[int]{}
+	instance := hashmap.NewSimpleHashmap[uint, *identity.SimpleIdentity[uint]](1)
+	elements := []*identity.SimpleIdentity[uint]{}
 	for i, tc := range testCases {
 		element := identity.NewSimpleIdentity(tc.oid, "element-type", nil)
 		elements = append(elements, element)
@@ -134,14 +134,14 @@ func TestRemove(t *testing.T) {
 func TestClear(t *testing.T) {
 	testCases := []struct {
 		name string
-		oid  int
+		oid  uint
 		err  error
 	}{
 		{name: "get element 1", oid: 1, err: nil},
 		{name: "get element 2", oid: 2, err: nil},
 	}
 
-	instance := hashmap.NewSimpleHashmap[int, *identity.SimpleIdentity[int]](1)
+	instance := hashmap.NewSimpleHashmap[uint, *identity.SimpleIdentity[uint]](1)
 	for _, tc := range testCases {
 		instance.Add(identity.NewSimpleIdentity(tc.oid, "element-type", nil))
 	}
@@ -157,7 +157,7 @@ func TestClear(t *testing.T) {
 func TestElements(t *testing.T) {
 	testCases := []struct {
 		name string
-		oid  int
+		oid  uint
 		err  error
 	}{
 		{name: "element 1", oid: 1, err: nil},
@@ -166,8 +166,8 @@ func TestElements(t *testing.T) {
 		{name: "element 4", oid: 3, err: fmt.Errorf(collection.ErrElementNotFound)},
 	}
 
-	instance := hashmap.NewSimpleHashmap[int, *identity.SimpleIdentity[int]](1)
-	elements := []*identity.SimpleIdentity[int]{}
+	instance := hashmap.NewSimpleHashmap[uint, *identity.SimpleIdentity[uint]](1)
+	elements := []*identity.SimpleIdentity[uint]{}
 	for i, tc := range testCases {
 		element := identity.NewSimpleIdentity(tc.oid, "element-type", nil)
 		elements = append(elements, element)
