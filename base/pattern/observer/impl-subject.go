@@ -3,6 +3,8 @@ package observer
 import (
 	"fmt"
 	"sync"
+
+	"github.com/aprksy/bricks/base/utils"
 )
 
 var _ Subject[int] = (*SimpleSubject[int])(nil)
@@ -22,7 +24,10 @@ type SimpleSubject[T comparable] struct {
 
 // Add implements Subject.
 func (s *SimpleSubject[T]) Add(obs Observer[T]) (subsId string, err error) {
-	subsId = randStr(8)
+	subsId, err = utils.RandStr(8)
+	if err != nil {
+		return "", fmt.Errorf("error generating id")
+	}
 
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
