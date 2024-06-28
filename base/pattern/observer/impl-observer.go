@@ -36,7 +36,7 @@ func (s *SimpleObserver[T]) Receive(subsId string, value T) {
 
 // Subscribe implements Observer.
 func (s *SimpleObserver[T]) Subscribe(subj Subject[T], localId string) (subsId *string, err error) {
-	err = fmt.Errorf("subject is nil")
+	err = fmt.Errorf(ErrSubjectNil)
 	if subj == nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (s *SimpleObserver[T]) Subscribe(subj Subject[T], localId string) (subsId *
 func (s *SimpleObserver[T]) Unsubscribe(subsId string) error {
 	subs, exists := s.subscriptions[subsId]
 	if !exists {
-		return fmt.Errorf("subscription not exists")
+		return fmt.Errorf(ErrSubscriptionNotFound)
 	}
 
 	delete(s.states, subs.LocalId)
@@ -81,7 +81,7 @@ func (s *SimpleObserver[T]) Ready(subsId string) {
 func (s *SimpleObserver[T]) Extract(key string) (*T, error) {
 	value, exists := s.states[key]
 	if !exists {
-		return nil, fmt.Errorf("key not found")
+		return nil, fmt.Errorf(ErrKeyNotFound)
 	}
 
 	return &value, nil

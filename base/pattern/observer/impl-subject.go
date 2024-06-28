@@ -26,7 +26,7 @@ type SimpleSubject[T comparable] struct {
 func (s *SimpleSubject[T]) Add(obs Observer[T]) (subsId string, err error) {
 	subsId, err = utils.RandStr(8)
 	if err != nil {
-		return "", fmt.Errorf("error generating id")
+		return "", fmt.Errorf(ErrIdGenFailed)
 	}
 
 	s.mtx.Lock()
@@ -59,7 +59,7 @@ func (s *SimpleSubject[T]) Remove(subsId string) error {
 	defer s.mtx.Unlock()
 
 	if _, exists := s.subscriptions[subsId]; !exists {
-		return fmt.Errorf("subscription not exists")
+		return fmt.Errorf(ErrSubscriptionNotFound)
 	}
 
 	delete(s.subscriptions, subsId)
