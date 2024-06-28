@@ -13,6 +13,13 @@ var (
 	_ Hashmap[int, *id.SimpleIdentity[int]]       = (*SimpleHashmap[int, *id.SimpleIdentity[int]])(nil)
 )
 
+func NewSimpleHashmap[K comparable, E id.Identity[K]](oid K) *SimpleHashmap[K, E] {
+	return &SimpleHashmap[K, E]{
+		SimpleIdentity: id.NewSimpleIdentity[K](oid, "simple-hashmap", nil),
+		storage:        map[K]E{},
+	}
+}
+
 type SimpleHashmap[K comparable, E id.Identity[K]] struct {
 	*id.SimpleIdentity[K]
 	mutex   sync.Mutex
