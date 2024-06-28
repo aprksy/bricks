@@ -16,11 +16,11 @@ func TestNewIdentity(t *testing.T) {
 		onInfo   func(t string, id T) string
 	}
 
-	onInfo1 := func(t string, id int) string { return fmt.Sprintf("%s (%d)", t, id) }
-	onInfo2 := func(t string, id int) string { return fmt.Sprintf("%s/%d", t, id) }
-	testCases := []TestCase[int]{
+	onInfo1 := func(t string, id uint) string { return fmt.Sprintf("%s (%d)", t, id) }
+	onInfo2 := func(t string, id uint) string { return fmt.Sprintf("%s/%d", t, id) }
+	testCases := []TestCase[uint]{
 		{"onInfo = nil", 1, "some-type-int", nil},
-		{"onInfo = not nil", 2, "some-type-int", func(t string, id int) string { return fmt.Sprintf("%s/%d", t, id) }},
+		{"onInfo = not nil", 2, "some-type-int", func(t string, id uint) string { return fmt.Sprintf("%s/%d", t, id) }},
 	}
 
 	for i, tc := range testCases {
