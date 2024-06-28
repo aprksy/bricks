@@ -92,9 +92,6 @@ func (s *SimpleHashmap[K, E]) HasElement(e E) bool {
 
 // Remove implements collection.Collection.
 func (s *SimpleHashmap[K, E]) Remove(e E) error {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
 	return s.RemoveById(e.Id())
 }
 
