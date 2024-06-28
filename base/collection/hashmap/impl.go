@@ -59,7 +59,7 @@ func (s *SimpleHashmap[K, E]) Add(e E) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	if !s.HasElement(e) {
+	if s.HasElement(e) {
 		return fmt.Errorf(cl.ErrElementExists)
 	}
 
