@@ -52,7 +52,7 @@ func TestAdd(t *testing.T) {
 			default:
 				assert.NotNil(t, err, "err should not be nil")
 				assert.EqualError(t, err, collection.ErrElementExists, fmt.Sprintf("err should equal '%s'", tc.err.Error()))
-				assert.Equal(t, instance.Size(), tc.count, fmt.Sprintf("instance.Size() should equal %d", tc.count))
+				assert.Equal(t, tc.count, instance.Size(), fmt.Sprintf("instance.Size() should equal %d", tc.count))
 			}
 		})
 	}
@@ -85,7 +85,7 @@ func TestElement(t *testing.T) {
 				assert.Nil(t, err, "err should be nil")
 				assert.NotNil(t, ptrE, "element should not be nil")
 				e := *ptrE
-				assert.Equal(t, e.Id(), tc.oid, fmt.Sprintf("Id() should equal %d", tc.oid))
+				assert.Equal(t, tc.oid, e.Id(), fmt.Sprintf("Id() should equal %d", tc.oid))
 			default:
 				assert.Nil(t, ptrE, "element should be nil")
 				assert.NotNil(t, err, "err should not be nil")
