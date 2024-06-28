@@ -13,6 +13,13 @@ var (
 	_ Hashmap[int, *id.SimpleIdentity[int]]       = (*SimpleHashmap[int, *id.SimpleIdentity[int]])(nil)
 )
 
+func NewSimpleHashmap[K comparable, E id.Identity[K]](oid K) *SimpleHashmap[K, E] {
+	return &SimpleHashmap[K, E]{
+		SimpleIdentity: id.NewSimpleIdentity[K](oid, "simple-hashmap", nil),
+		storage:        map[K]E{},
+	}
+}
+
 type SimpleHashmap[K comparable, E id.Identity[K]] struct {
 	*id.SimpleIdentity[K]
 	mutex   sync.Mutex
@@ -23,7 +30,7 @@ type SimpleHashmap[K comparable, E id.Identity[K]] struct {
 func (s *SimpleHashmap[K, E]) Element(id K) (*E, error) {
 	e, exists := s.storage[id]
 	if !exists {
-		return nil, fmt.Errorf("element not found")
+		return nil, fmt.Errorf(cl.ErrElementNotFound)
 	}
 	return &e, nil
 }
@@ -40,7 +47,7 @@ func (s *SimpleHashmap[K, E]) RemoveById(id K) error {
 	defer s.mutex.Unlock()
 
 	if !s.HasElementById(id) {
-		return fmt.Errorf("element not found")
+		return fmt.Errorf(cl.ErrElementNotFound)
 	}
 
 	delete(s.storage, id)
@@ -52,8 +59,8 @@ func (s *SimpleHashmap[K, E]) Add(e E) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	if !s.HasElement(e) {
-		return fmt.Errorf("element exists")
+	if s.HasElement(e) {
+		return fmt.Errorf(cl.ErrElementExists)
 	}
 
 	s.storage[e.Id()] = e
@@ -85,9 +92,6 @@ func (s *SimpleHashmap[K, E]) HasElement(e E) bool {
 
 // Remove implements collection.Collection.
 func (s *SimpleHashmap[K, E]) Remove(e E) error {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
 	return s.RemoveById(e.Id())
 }
 
