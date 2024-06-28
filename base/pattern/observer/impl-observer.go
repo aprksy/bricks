@@ -9,6 +9,12 @@ import (
 
 var _ Observer[int, int] = (*SimpleObserver[int, int])(nil)
 
+func NewSimpleObserverWithSubjectManager[I, T comparable](oid I, onReceive func(key string, value T), sm SubjectManager[I]) *SimpleObserver[I, T] {
+	observer := NewSimpleObserver[I](oid, onReceive)
+	observer.subjectMgr = sm
+	return observer
+}
+
 func NewSimpleObserver[I, T comparable](oid I, onReceive func(key string, value T)) *SimpleObserver[I, T] {
 	id := identity.NewSimpleIdentity[I](oid, "simple-observer", nil)
 	return &SimpleObserver[I, T]{
@@ -23,6 +29,7 @@ func NewSimpleObserver[I, T comparable](oid I, onReceive func(key string, value 
 
 type SimpleObserver[I, T comparable] struct {
 	identity.SimpleIdentity[I]
+	subjectMgr    SubjectManager[I]
 	mutex         sync.Mutex
 	subscriptions map[I]Subject[I, T]
 	keysBySub     map[I]string
@@ -82,7 +89,22 @@ func (s *SimpleObserver[I, T]) Subscribe(subject Subject[I, T], key string) (*I,
 
 // SubscribeByKey implements Observer.
 func (s *SimpleObserver[I, T]) SubscribeByKey(key string) (*I, Subject[I, T], error) {
-	panic("unimplemented")
+	if s.subjectMgr == nil {
+		return nil, nil, fmt.Errorf(ErrSubjectMgrNil)
+	}
+
+	subsid, subjectRaw, err := s.subjectMgr.Subscribe(key, (Observer[I, T])(s).(Observer[I, any]))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	subject, ok := subjectRaw.(Subject[I, T])
+
+	if !ok {
+		return nil, nil, fmt.Errorf(ErrIncompatibleType)
+	}
+
+	return subsid, subject, nil
 }
 
 // Unsubscribe implements Observer.
