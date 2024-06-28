@@ -130,3 +130,24 @@ func TestRemove(t *testing.T) {
 		})
 	}
 }
+
+func TestClear(t *testing.T) {
+	testCases := []struct {
+		name string
+		oid  int
+		err  error
+	}{
+		{name: "get element 1", oid: 1, err: nil},
+		{name: "get element 2", oid: 2, err: nil},
+	}
+
+	instance := hashmap.NewSimpleHashmap[int, *identity.SimpleIdentity[int]](1)
+	for _, tc := range testCases {
+		instance.Add(identity.NewSimpleIdentity(tc.oid, "element-type", nil))
+	}
+
+	t.Run("clear", func(t *testing.T) {
+		err := instance.Clear()
+		assert.Nil(t, err, "err should be nil")
+	})
+}
