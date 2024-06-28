@@ -9,7 +9,7 @@ import "github.com/aprksy/bricks/base/identity"
 
 type Subject[I, T comparable] interface {
 	identity.Identity[I]
-	Supports(key string) bool
+	Supportedkey() string
 	Extract() T
 	Inject(value T) error
 	Add(obs Observer[I, T]) (*I, error)
@@ -25,4 +25,10 @@ type Observer[I, T comparable] interface {
 	Ready(subsId I)
 	Receive(subsId I, value T)
 	Extract(key string) (*T, error)
+}
+
+type SubjectManager[I comparable] interface {
+	AddSubjects(subjects ...Subject[I, any]) error
+	Subscribe(key string, observer Observer[I, any]) (*I, Subject[I, any], error)
+	Inject(key string, value any) error
 }
