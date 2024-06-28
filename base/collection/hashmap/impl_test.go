@@ -94,3 +94,39 @@ func TestElement(t *testing.T) {
 		})
 	}
 }
+
+func TestRemove(t *testing.T) {
+	testCases := []struct {
+		name string
+		oid  int
+		err  error
+	}{
+		{name: "rm element 1", oid: 1, err: nil},
+		{name: "rm element 2", oid: 2, err: nil},
+		{name: "rm element 3", oid: 3, err: fmt.Errorf(collection.ErrElementNotFound)},
+	}
+
+	instance := hashmap.NewSimpleHashmap[int, *identity.SimpleIdentity[int]](1)
+	elements := []*identity.SimpleIdentity[int]{}
+	for i, tc := range testCases {
+		element := identity.NewSimpleIdentity(tc.oid, "element-type", nil)
+		elements = append(elements, element)
+		if i == 2 {
+			break
+		}
+		instance.Add(element)
+	}
+
+	for i, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := instance.Remove(elements[i])
+			switch i {
+			case 0, 1:
+				assert.Nil(t, err, "err should be nil")
+			default:
+				assert.NotNil(t, err, "err should not be nil")
+				assert.EqualError(t, err, collection.ErrElementNotFound, fmt.Sprintf("err should equal '%s'", tc.err.Error()))
+			}
+		})
+	}
+}
