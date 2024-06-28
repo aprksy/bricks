@@ -149,5 +149,45 @@ func TestClear(t *testing.T) {
 	t.Run("clear", func(t *testing.T) {
 		err := instance.Clear()
 		assert.Nil(t, err, "err should be nil")
+		assert.Zero(t, instance.Size(), "Size() should be 0")
+		assert.Empty(t, instance.Elements(), "Elements() should be empty")
+	})
+}
+
+func TestElements(t *testing.T) {
+	testCases := []struct {
+		name string
+		oid  int
+		err  error
+	}{
+		{name: "element 1", oid: 1, err: nil},
+		{name: "element 2", oid: 2, err: nil},
+		{name: "element 3", oid: 3, err: nil},
+		{name: "element 4", oid: 3, err: fmt.Errorf(collection.ErrElementNotFound)},
+	}
+
+	instance := hashmap.NewSimpleHashmap[int, *identity.SimpleIdentity[int]](1)
+	elements := []*identity.SimpleIdentity[int]{}
+	for i, tc := range testCases {
+		element := identity.NewSimpleIdentity(tc.oid, "element-type", nil)
+		elements = append(elements, element)
+		if i == 3 {
+			break
+		}
+		instance.Add(element)
+	}
+
+	t.Run("elements", func(t *testing.T) {
+		elems := instance.Elements()
+		assert.NotNil(t, elems, "Elements() should not be nil")
+		assert.Equal(t, instance.Size(), len(elems), "Size() should equal len(elems)")
+
+		instance.Remove(elements[0])
+		elems = instance.Elements()
+		assert.Equal(t, instance.Size(), len(elems), "Size() should equal len(elems)")
+
+		el, err := instance.Element(1)
+		assert.EqualErrorf(t, err, collection.ErrElementNotFound, fmt.Sprintf("err should equal %s", collection.ErrElementNotFound))
+		assert.Nil(t, el, "element should be nil")
 	})
 }
