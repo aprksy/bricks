@@ -27,13 +27,13 @@ func TestNewIdentity(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			instance := id.NewSimpleIdentity(tc.id, tc.typeName, tc.onInfo)
 			assert.NotNil(t, instance, "instance should not nil")
-			assert.Equal(t, instance.Id(), tc.id, "Id() should equal 1")
-			assert.Equal(t, instance.TypeName(), tc.typeName, "TypeName() should equal "+fmt.Sprintf("'%s'", tc.typeName))
+			assert.Equal(t, tc.id, instance.Id(), "Id() should equal 1")
+			assert.Equal(t, tc.typeName, instance.TypeName(), "TypeName() should equal "+fmt.Sprintf("'%s'", tc.typeName))
 			if i == 0 {
-				assert.Equal(t, instance.InstanceInfo(), onInfo1(tc.typeName, tc.id), "InstanceInfo() should equal "+
+				assert.Equal(t, onInfo1(tc.typeName, tc.id), instance.InstanceInfo(), "InstanceInfo() should equal "+
 					onInfo1(tc.typeName, tc.id))
 			} else {
-				assert.Equal(t, instance.InstanceInfo(), onInfo2(tc.typeName, tc.id), "InstanceInfo() should equal "+
+				assert.Equal(t, onInfo2(tc.typeName, tc.id), instance.InstanceInfo(), "InstanceInfo() should equal "+
 					onInfo2(tc.typeName, tc.id))
 			}
 		})
