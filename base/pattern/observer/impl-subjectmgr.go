@@ -1,37 +1,39 @@
 package observer
 
-import "fmt"
+import (
+	"fmt"
 
-var _ SubjectManager[int] = (*SimpleSubjectManager[int])(nil)
+	id "github.com/aprksy/bricks/base/identity"
+)
 
-func NewSubjectManager[I comparable]() *SimpleSubjectManager[I] {
-	return &SimpleSubjectManager[I]{
+func NewSubjectManager[I id.IDType]() *SubjectManager[I] {
+	return &SubjectManager[I]{
 		subjects: map[string]Subject[I, any]{},
 	}
 }
 
-type SimpleSubjectManager[I comparable] struct {
+type SubjectManager[I id.IDType] struct {
 	subjects map[string]Subject[I, any]
 }
 
-// AddSubjects implements SubjectManager.
-func (s *SimpleSubjectManager[I]) AddSubjects(subjects ...Subject[I, any]) error {
-	for _, subject := range subjects {
+func AddSubjects[I id.IDType, T comparable](subjmgr *SubjectManager[I], subjs ...Subject[I, T]) error {
+	s := subjmgr
+	for _, subject := range subjs {
 		_, exists := s.subjects[subject.Supportedkey()]
 		if !exists {
 			return fmt.Errorf(ErrKeyExists)
 		}
 	}
 
-	for _, subject := range subjects {
-		s.subjects[subject.Supportedkey()] = subject
+	for _, subject := range subjs {
+		s.subjects[subject.Supportedkey()] = subject.(Subject[I, any])
 	}
 
 	return nil
 }
 
-// Inject implements SubjectManager.
-func (s *SimpleSubjectManager[I]) Inject(key string, value any) error {
+func Inject[I id.IDType, T comparable](subjmgr *SubjectManager[I], key string, value T) error {
+	s := subjmgr
 	subject, exists := s.subjects[key]
 	if !exists {
 		return fmt.Errorf(ErrKeyNotFound)
@@ -40,13 +42,14 @@ func (s *SimpleSubjectManager[I]) Inject(key string, value any) error {
 	return subject.Inject(value)
 }
 
-// Subscribe implements SubjectManager.
-func (s *SimpleSubjectManager[I]) Subscribe(key string, observer Observer[I, any]) (*I, Subject[I, any], error) {
-	subject, exists := s.subjects[key]
+func Subscribe[I id.IDType, T comparable](subjmgr *SubjectManager[I], key string, obs Observer[I, T]) (*string, Subject[I, T], error) {
+	s := subjmgr
+	subjectRaw, exists := s.subjects[key]
 	if !exists {
 		return nil, nil, fmt.Errorf(ErrKeyNotFound)
 	}
 
-	subsid, err := subject.Add(observer)
+	subject := subjectRaw.(Subject[I, T])
+	subsid, err := subject.Add(obs)
 	return subsid, subject, err
 }

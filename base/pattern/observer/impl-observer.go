@@ -4,36 +4,36 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/aprksy/bricks/base/identity"
+	id "github.com/aprksy/bricks/base/identity"
 )
 
-var _ Observer[int, int] = (*SimpleObserver[int, int])(nil)
+var _ Observer[uint, int] = (*SimpleObserver[uint, int])(nil)
 
-func NewSimpleObserverWithSubjectManager[I, T comparable](oid I, onReceive func(key string, value T), sm SubjectManager[I]) *SimpleObserver[I, T] {
+func NewSimpleObserverWithSubjectManager[I id.IDType, T comparable](oid I, onReceive func(key string, value T), sm *SubjectManager[I]) *SimpleObserver[I, T] {
 	observer := NewSimpleObserver[I](oid, onReceive)
 	observer.subjectMgr = sm
 	return observer
 }
 
-func NewSimpleObserver[I, T comparable](oid I, onReceive func(key string, value T)) *SimpleObserver[I, T] {
-	id := identity.NewSimpleIdentity[I](oid, "simple-observer", nil)
+func NewSimpleObserver[I id.IDType, T comparable](oid I, onReceive func(key string, value T)) *SimpleObserver[I, T] {
+	id := id.NewSimpleIdentity[I](oid, "simple-observer", nil)
 	return &SimpleObserver[I, T]{
 		SimpleIdentity: *id,
-		subscriptions:  map[I]Subject[I, T]{},
-		subsByKey:      map[string]I{},
+		subscriptions:  map[string]Subject[I, T]{},
+		subsByKey:      map[string]string{},
 		dataByKey:      map[string]T{},
-		keysBySub:      map[I]string{},
+		keysBySub:      map[string]string{},
 		OnReceive:      onReceive,
 	}
 }
 
-type SimpleObserver[I, T comparable] struct {
-	identity.SimpleIdentity[I]
-	subjectMgr    SubjectManager[I]
+type SimpleObserver[I id.IDType, T comparable] struct {
+	id.SimpleIdentity[I]
+	subjectMgr    *SubjectManager[I]
 	mutex         sync.Mutex
-	subscriptions map[I]Subject[I, T]
-	keysBySub     map[I]string
-	subsByKey     map[string]I
+	subscriptions map[string]Subject[I, T]
+	keysBySub     map[string]string
+	subsByKey     map[string]string
 	dataByKey     map[string]T
 	OnReceive     func(key string, value T)
 }
@@ -48,12 +48,12 @@ func (s *SimpleObserver[I, T]) Extract(key string) (*T, error) {
 }
 
 // Ready implements Observer.
-func (s *SimpleObserver[I, T]) Ready(subsId I) {
+func (s *SimpleObserver[I, T]) Ready(subsId string) {
 	s.subscriptions[subsId].Notify()
 }
 
 // Receive implements Observer.
-func (s *SimpleObserver[I, T]) Receive(subsId I, value T) {
+func (s *SimpleObserver[I, T]) Receive(subsId string, value T) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -65,7 +65,7 @@ func (s *SimpleObserver[I, T]) Receive(subsId I, value T) {
 }
 
 // Subscribe implements Observer.
-func (s *SimpleObserver[I, T]) Subscribe(subject Subject[I, T], key string) (*I, error) {
+func (s *SimpleObserver[I, T]) Subscribe(subject Subject[I, T], key string) (*string, error) {
 	err := fmt.Errorf(ErrSubjectNil)
 	if subject == nil {
 		return nil, err
@@ -88,27 +88,21 @@ func (s *SimpleObserver[I, T]) Subscribe(subject Subject[I, T], key string) (*I,
 }
 
 // SubscribeByKey implements Observer.
-func (s *SimpleObserver[I, T]) SubscribeByKey(key string) (*I, Subject[I, T], error) {
+func (s *SimpleObserver[I, T]) SubscribeByKey(key string) (*string, Subject[I, T], error) {
 	if s.subjectMgr == nil {
 		return nil, nil, fmt.Errorf(ErrSubjectMgrNil)
 	}
 
-	subsid, subjectRaw, err := s.subjectMgr.Subscribe(key, (Observer[I, T])(s).(Observer[I, any]))
+	subsid, subject, err := Subscribe[I, T](s.subjectMgr, key, s)
 	if err != nil {
 		return nil, nil, err
-	}
-
-	subject, ok := subjectRaw.(Subject[I, T])
-
-	if !ok {
-		return nil, nil, fmt.Errorf(ErrIncompatibleType)
 	}
 
 	return subsid, subject, nil
 }
 
 // Unsubscribe implements Observer.
-func (s *SimpleObserver[I, T]) Unsubscribe(subsId I) error {
+func (s *SimpleObserver[I, T]) Unsubscribe(subsId string) error {
 	subject, exists := s.subscriptions[subsId]
 	if !exists {
 		return fmt.Errorf(ErrSubscriptionNotFound)
