@@ -4,64 +4,71 @@ import (
 	"fmt"
 	"sync"
 
+	id "github.com/aprksy/bricks/base/identity"
 	"github.com/aprksy/bricks/base/utils"
 )
 
-var _ Subject[int] = (*SimpleSubject[int])(nil)
+var _ Subject[uint, int] = (*SimpleSubject[uint, int])(nil)
 
-func NewSimpleSubject[T comparable](initData T) *SimpleSubject[T] {
-	return &SimpleSubject[T]{
-		data:          initData,
-		subscriptions: map[string]Observer[T]{},
+func NewSimpleSubject[I id.IDType, T comparable](oid I, key string, value T) *SimpleSubject[I, T] {
+	return &SimpleSubject[I, T]{
+		Identity:    id.NewSimpleIdentity(oid, "simple-subject", nil),
+		key:         key,
+		value:       value,
+		subscribers: map[string]Observer[I, T]{},
 	}
 }
 
-type SimpleSubject[T comparable] struct {
-	mtx           sync.Mutex
-	subscriptions map[string]Observer[T]
-	data          T
+type SimpleSubject[I id.IDType, T comparable] struct {
+	id.Identity[I]
+	mutex       sync.Mutex
+	key         string
+	value       T
+	subscribers map[string]Observer[I, T]
 }
 
 // Add implements Subject.
-func (s *SimpleSubject[T]) Add(obs Observer[T]) (subsId string, err error) {
-	subsId, err = utils.RandStr(8)
-	if err != nil {
-		return "", fmt.Errorf("error generating id")
-	}
+func (s *SimpleSubject[I, T]) Add(obs Observer[I, T]) (*string, error) {
+	subsid, _ := utils.RandStr(6)
 
-	s.mtx.Lock()
-	defer s.mtx.Unlock()
-	s.subscriptions[subsId] = obs
-	return subsId, nil
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.subscribers[subsid] = obs
+	return &subsid, nil
 }
 
-// Get implements Subject.
-func (s *SimpleSubject[T]) Get() T {
-	return s.data
+// Extract implements Subject.
+func (s *SimpleSubject[I, T]) Extract() T {
+	return s.value
 }
 
 // Inject implements Subject.
-func (s *SimpleSubject[T]) Inject(value T) {
-	s.data = value
-	s.Notify()
+func (s *SimpleSubject[I, T]) Inject(value T) error {
+	s.value = value
+	return nil
 }
 
 // Notify implements Subject.
-func (s *SimpleSubject[T]) Notify() {
-	for subsid, obs := range s.subscriptions {
-		go obs.Receive(subsid, s.data)
+func (s *SimpleSubject[I, T]) Notify() {
+	for subsid, obs := range s.subscribers {
+		go obs.Receive(subsid, s.value)
 	}
 }
 
 // Remove implements Subject.
-func (s *SimpleSubject[T]) Remove(subsId string) error {
-	s.mtx.Lock()
-	defer s.mtx.Unlock()
+func (s *SimpleSubject[I, T]) Remove(subsId string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 
-	if _, exists := s.subscriptions[subsId]; !exists {
-		return fmt.Errorf("subscription not exists")
+	if _, exists := s.subscribers[subsId]; !exists {
+		return fmt.Errorf(ErrSubscriptionNotFound)
 	}
 
-	delete(s.subscriptions, subsId)
+	delete(s.subscribers, subsId)
 	return nil
+}
+
+// Supportedkey implements Subject.
+func (s *SimpleSubject[I, T]) Supportedkey() string {
+	return s.key
 }
