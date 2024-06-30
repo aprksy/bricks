@@ -44,8 +44,8 @@ func (s *SimpleSubject[I, T]) Extract() T {
 
 // Inject implements Subject.
 func (s *SimpleSubject[I, T]) Inject(value T) error {
-	// s.mutex.Lock()
-	// defer s.mutex.Unlock()
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 
 	s.value = value
 	s.Notify()
