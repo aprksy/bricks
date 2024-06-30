@@ -40,10 +40,11 @@ type SimpleObserver[I id.IDType, T comparable] struct {
 
 // Extract implements Observer.
 func (s *SimpleObserver[I, T]) Extract(key string) (*T, error) {
-	value, exists := s.dataByKey[key]
+	chValue, exists := s.dataByKey[key]
 	if !exists {
 		return nil, fmt.Errorf(ErrKeyNotFound)
 	}
+	value := chValue
 	return &value, nil
 }
 
@@ -71,10 +72,7 @@ func (s *SimpleObserver[I, T]) Subscribe(subject Subject[I, T], key string) (*st
 		return nil, err
 	}
 
-	subsid, err := subject.Add(s)
-	if err != nil {
-		return nil, err
-	}
+	subsid, _ := subject.Add(s)
 
 	defer s.Ready(*subsid)
 
@@ -98,6 +96,14 @@ func (s *SimpleObserver[I, T]) SubscribeByKey(key string) (*string, Subject[I, T
 		return nil, nil, err
 	}
 
+	defer s.Ready(*subsid)
+
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.subscriptions[*subsid] = subject
+	s.subsByKey[key] = *subsid
+	s.keysBySub[*subsid] = key
+
 	return subsid, subject, nil
 }
 
@@ -108,9 +114,7 @@ func (s *SimpleObserver[I, T]) Unsubscribe(subsId string) error {
 		return fmt.Errorf(ErrSubscriptionNotFound)
 	}
 
-	if err := subject.Remove(subsId); err != nil {
-		return err
-	}
+	subject.Remove(subsId)
 
 	key := s.keysBySub[subsId]
 	delete(s.keysBySub, subsId)

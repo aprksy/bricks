@@ -8,25 +8,25 @@ import (
 
 func NewSubjectManager[I id.IDType]() *SubjectManager[I] {
 	return &SubjectManager[I]{
-		subjects: map[string]Subject[I, any]{},
+		subjects: map[string]any{},
 	}
 }
 
 type SubjectManager[I id.IDType] struct {
-	subjects map[string]Subject[I, any]
+	subjects map[string]any
 }
 
 func AddSubjects[I id.IDType, T comparable](subjmgr *SubjectManager[I], subjs ...Subject[I, T]) error {
 	s := subjmgr
 	for _, subject := range subjs {
 		_, exists := s.subjects[subject.Supportedkey()]
-		if !exists {
+		if exists {
 			return fmt.Errorf(ErrKeyExists)
 		}
 	}
 
 	for _, subject := range subjs {
-		s.subjects[subject.Supportedkey()] = subject.(Subject[I, any])
+		s.subjects[subject.Supportedkey()] = subject
 	}
 
 	return nil
@@ -39,7 +39,7 @@ func Inject[I id.IDType, T comparable](subjmgr *SubjectManager[I], key string, v
 		return fmt.Errorf(ErrKeyNotFound)
 	}
 
-	return subject.Inject(value)
+	return subject.(Subject[I, T]).Inject(value)
 }
 
 func Subscribe[I id.IDType, T comparable](subjmgr *SubjectManager[I], key string, obs Observer[I, T]) (*string, Subject[I, T], error) {
