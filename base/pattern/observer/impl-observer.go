@@ -21,7 +21,7 @@ func NewSimpleObserver[I id.IDType, T comparable](oid I, onReceive func(key stri
 		SimpleIdentity: *id,
 		subscriptions:  map[string]Subject[I, T]{},
 		subsByKey:      map[string]string{},
-		dataByKey:      map[string]T{},
+		dataByKey:      map[string]chan T{},
 		keysBySub:      map[string]string{},
 		OnReceive:      onReceive,
 	}
@@ -34,16 +34,17 @@ type SimpleObserver[I id.IDType, T comparable] struct {
 	subscriptions map[string]Subject[I, T]
 	keysBySub     map[string]string
 	subsByKey     map[string]string
-	dataByKey     map[string]T
+	dataByKey     map[string]chan T
 	OnReceive     func(key string, value T)
 }
 
 // Extract implements Observer.
 func (s *SimpleObserver[I, T]) Extract(key string) (*T, error) {
-	value, exists := s.dataByKey[key]
+	chValue, exists := s.dataByKey[key]
 	if !exists {
 		return nil, fmt.Errorf(ErrKeyNotFound)
 	}
+	value := <-chValue
 	return &value, nil
 }
 
@@ -58,7 +59,7 @@ func (s *SimpleObserver[I, T]) Receive(subsId string, value T) {
 	defer s.mutex.Unlock()
 
 	key := s.keysBySub[subsId]
-	s.dataByKey[key] = value
+	s.dataByKey[key] <- value
 	if s.OnReceive != nil {
 		s.OnReceive(key, value)
 	}
@@ -71,10 +72,7 @@ func (s *SimpleObserver[I, T]) Subscribe(subject Subject[I, T], key string) (*st
 		return nil, err
 	}
 
-	subsid, err := subject.Add(s)
-	if err != nil {
-		return nil, err
-	}
+	subsid, _ := subject.Add(s)
 
 	defer s.Ready(*subsid)
 
@@ -83,6 +81,7 @@ func (s *SimpleObserver[I, T]) Subscribe(subject Subject[I, T], key string) (*st
 	s.subscriptions[*subsid] = subject
 	s.subsByKey[key] = *subsid
 	s.keysBySub[*subsid] = key
+	s.dataByKey[key] = make(chan T)
 
 	return subsid, nil
 }
@@ -108,9 +107,7 @@ func (s *SimpleObserver[I, T]) Unsubscribe(subsId string) error {
 		return fmt.Errorf(ErrSubscriptionNotFound)
 	}
 
-	if err := subject.Remove(subsId); err != nil {
-		return err
-	}
+	subject.Remove(subsId)
 
 	key := s.keysBySub[subsId]
 	delete(s.keysBySub, subsId)
