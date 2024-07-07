@@ -3,32 +3,27 @@ package observer
 import (
 	"fmt"
 	"sync"
-
-	id "github.com/aprksy/bricks/base/identity"
 )
 
 var _ Observer[uint, int] = (*SimpleObserver[uint, int])(nil)
 
-func NewSimpleObserverWithSubjectManager[I id.IDType, T comparable](oid I, onReceive func(key string, value T), sm *SubjectManager[I]) *SimpleObserver[I, T] {
+func NewSimpleObserverWithSubjectManager[I comparable, T comparable](oid I, onReceive func(key string, value T), sm *SubjectManager[I]) *SimpleObserver[I, T] {
 	observer := NewSimpleObserver[I](oid, onReceive)
 	observer.subjectMgr = sm
 	return observer
 }
 
-func NewSimpleObserver[I id.IDType, T comparable](oid I, onReceive func(key string, value T)) *SimpleObserver[I, T] {
-	id := id.NewSimpleIdentity[I](oid, "simple-observer", nil)
+func NewSimpleObserver[I comparable, T comparable](oid I, onReceive func(key string, value T)) *SimpleObserver[I, T] {
 	return &SimpleObserver[I, T]{
-		SimpleIdentity: *id,
-		subscriptions:  map[string]Subject[I, T]{},
-		subsByKey:      map[string]string{},
-		dataByKey:      map[string]T{},
-		keysBySub:      map[string]string{},
-		OnReceive:      onReceive,
+		subscriptions: map[string]Subject[I, T]{},
+		subsByKey:     map[string]string{},
+		dataByKey:     map[string]T{},
+		keysBySub:     map[string]string{},
+		OnReceive:     onReceive,
 	}
 }
 
-type SimpleObserver[I id.IDType, T comparable] struct {
-	id.SimpleIdentity[I]
+type SimpleObserver[I comparable, T comparable] struct {
 	subjectMgr    *SubjectManager[I]
 	mutex         sync.Mutex
 	subscriptions map[string]Subject[I, T]

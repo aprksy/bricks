@@ -2,21 +2,19 @@ package observer
 
 import (
 	"fmt"
-
-	id "github.com/aprksy/bricks/base/identity"
 )
 
-func NewSubjectManager[I id.IDType]() *SubjectManager[I] {
+func NewSubjectManager[I comparable]() *SubjectManager[I] {
 	return &SubjectManager[I]{
 		subjects: map[string]any{},
 	}
 }
 
-type SubjectManager[I id.IDType] struct {
+type SubjectManager[I comparable] struct {
 	subjects map[string]any
 }
 
-func AddSubjects[I id.IDType, T comparable](subjmgr *SubjectManager[I], subjs ...Subject[I, T]) error {
+func AddSubjects[I comparable, T comparable](subjmgr *SubjectManager[I], subjs ...Subject[I, T]) error {
 	s := subjmgr
 	for _, subject := range subjs {
 		_, exists := s.subjects[subject.Supportedkey()]
@@ -32,7 +30,7 @@ func AddSubjects[I id.IDType, T comparable](subjmgr *SubjectManager[I], subjs ..
 	return nil
 }
 
-func Inject[I id.IDType, T comparable](subjmgr *SubjectManager[I], key string, value T) error {
+func Inject[I comparable, T comparable](subjmgr *SubjectManager[I], key string, value T) error {
 	s := subjmgr
 	subject, exists := s.subjects[key]
 	if !exists {
@@ -42,7 +40,7 @@ func Inject[I id.IDType, T comparable](subjmgr *SubjectManager[I], key string, v
 	return subject.(Subject[I, T]).Inject(value)
 }
 
-func Subscribe[I id.IDType, T comparable](subjmgr *SubjectManager[I], key string, obs Observer[I, T]) (*string, Subject[I, T], error) {
+func Subscribe[I comparable, T comparable](subjmgr *SubjectManager[I], key string, obs Observer[I, T]) (*string, Subject[I, T], error) {
 	s := subjmgr
 	subjectRaw, exists := s.subjects[key]
 	if !exists {
