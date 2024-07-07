@@ -21,10 +21,9 @@ func TestNewHashmap(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			instance := hashmap.NewSimpleHashmap[uint, *identity.SimpleIdentity[uint]](tc.oid)
+			instance := hashmap.NewSimpleHashmap[uint, *identity.SimpleIdentity[uint]]()
 
 			assert.NotNil(t, instance, "instance should not nil")
-			assert.NotNil(t, instance.SimpleIdentity, "instance's SimpleIdentity should not nil")
 		})
 	}
 }
@@ -32,7 +31,7 @@ func TestNewHashmap(t *testing.T) {
 func TestAdd(t *testing.T) {
 	testCases := []struct {
 		name  string
-		oid   uint
+		oid   int
 		err   error
 		count int
 	}{
@@ -41,10 +40,10 @@ func TestAdd(t *testing.T) {
 		{name: "add element 2", oid: 2, err: fmt.Errorf(collection.ErrElementExists), count: 2},
 	}
 
-	instance := hashmap.NewSimpleHashmap[uint, *identity.SimpleIdentity[uint]](1)
+	instance := hashmap.NewSimpleHashmap[int, int]()
 	for i, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := instance.Add(identity.NewSimpleIdentity(tc.oid, "element-type", nil))
+			err := instance.Add(tc.oid, tc.oid)
 			switch i {
 			case 0, 1:
 				assert.Nil(t, err, "err should be nil")
@@ -61,7 +60,7 @@ func TestAdd(t *testing.T) {
 func TestElement(t *testing.T) {
 	testCases := []struct {
 		name string
-		oid  uint
+		oid  int
 		err  error
 	}{
 		{name: "get element 1", oid: 1, err: nil},
@@ -69,12 +68,12 @@ func TestElement(t *testing.T) {
 		{name: "get element 3", oid: 3, err: fmt.Errorf(collection.ErrElementNotFound)},
 	}
 
-	instance := hashmap.NewSimpleHashmap[uint, *identity.SimpleIdentity[uint]](1)
+	instance := hashmap.NewSimpleHashmap[int, int]()
 	for i, tc := range testCases {
 		if i == 2 {
 			break
 		}
-		instance.Add(identity.NewSimpleIdentity(tc.oid, "element-type", nil))
+		instance.Add(tc.oid, tc.oid)
 	}
 
 	for i, tc := range testCases {
@@ -84,8 +83,6 @@ func TestElement(t *testing.T) {
 			case 0, 1:
 				assert.Nil(t, err, "err should be nil")
 				assert.NotNil(t, ptrE, "element should not be nil")
-				e := *ptrE
-				assert.Equal(t, tc.oid, e.Id(), fmt.Sprintf("Id() should equal %d", tc.oid))
 			default:
 				assert.Nil(t, ptrE, "element should be nil")
 				assert.NotNil(t, err, "err should not be nil")
@@ -98,7 +95,7 @@ func TestElement(t *testing.T) {
 func TestRemove(t *testing.T) {
 	testCases := []struct {
 		name string
-		oid  uint
+		oid  int
 		err  error
 	}{
 		{name: "rm element 1", oid: 1, err: nil},
@@ -106,15 +103,14 @@ func TestRemove(t *testing.T) {
 		{name: "rm element 3", oid: 3, err: fmt.Errorf(collection.ErrElementNotFound)},
 	}
 
-	instance := hashmap.NewSimpleHashmap[uint, *identity.SimpleIdentity[uint]](1)
-	elements := []*identity.SimpleIdentity[uint]{}
+	instance := hashmap.NewSimpleHashmap[int, int]()
+	elements := []int{}
 	for i, tc := range testCases {
-		element := identity.NewSimpleIdentity(tc.oid, "element-type", nil)
-		elements = append(elements, element)
+		elements = append(elements, tc.oid)
 		if i == 2 {
 			break
 		}
-		instance.Add(element)
+		instance.Add(tc.oid, tc.oid)
 	}
 
 	for i, tc := range testCases {
@@ -134,16 +130,16 @@ func TestRemove(t *testing.T) {
 func TestClear(t *testing.T) {
 	testCases := []struct {
 		name string
-		oid  uint
+		oid  int
 		err  error
 	}{
 		{name: "get element 1", oid: 1, err: nil},
 		{name: "get element 2", oid: 2, err: nil},
 	}
 
-	instance := hashmap.NewSimpleHashmap[uint, *identity.SimpleIdentity[uint]](1)
+	instance := hashmap.NewSimpleHashmap[int, int]()
 	for _, tc := range testCases {
-		instance.Add(identity.NewSimpleIdentity(tc.oid, "element-type", nil))
+		instance.Add(tc.oid, tc.oid)
 	}
 
 	t.Run("clear", func(t *testing.T) {
@@ -157,7 +153,7 @@ func TestClear(t *testing.T) {
 func TestElements(t *testing.T) {
 	testCases := []struct {
 		name string
-		oid  uint
+		oid  int
 		err  error
 	}{
 		{name: "element 1", oid: 1, err: nil},
@@ -166,15 +162,14 @@ func TestElements(t *testing.T) {
 		{name: "element 4", oid: 3, err: fmt.Errorf(collection.ErrElementNotFound)},
 	}
 
-	instance := hashmap.NewSimpleHashmap[uint, *identity.SimpleIdentity[uint]](1)
-	elements := []*identity.SimpleIdentity[uint]{}
+	instance := hashmap.NewSimpleHashmap[int, int]()
+	elements := []int{}
 	for i, tc := range testCases {
-		element := identity.NewSimpleIdentity(tc.oid, "element-type", nil)
-		elements = append(elements, element)
+		elements = append(elements, tc.oid)
 		if i == 3 {
 			break
 		}
-		instance.Add(element)
+		instance.Add(tc.oid, tc.oid)
 	}
 
 	t.Run("elements", func(t *testing.T) {

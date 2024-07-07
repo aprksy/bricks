@@ -5,23 +5,20 @@ import (
 	"sync"
 
 	cl "github.com/aprksy/bricks/base/collection"
-	id "github.com/aprksy/bricks/base/identity"
 )
 
 var (
-	_ cl.Collection[uint, *id.SimpleIdentity[uint]] = (*SimpleHashmap[uint, *id.SimpleIdentity[uint]])(nil)
-	_ Hashmap[uint, *id.SimpleIdentity[uint]]       = (*SimpleHashmap[uint, *id.SimpleIdentity[uint]])(nil)
+	_ cl.Collection[int, string] = (*SimpleHashmap[int, string])(nil)
+	_ Hashmap[int, string]       = (*SimpleHashmap[int, string])(nil)
 )
 
-func NewSimpleHashmap[K id.IDType, E id.Identity[K]](oid K) *SimpleHashmap[K, E] {
+func NewSimpleHashmap[K comparable, E comparable]() *SimpleHashmap[K, E] {
 	return &SimpleHashmap[K, E]{
-		SimpleIdentity: id.NewSimpleIdentity[K](oid, "simple-hashmap", nil),
-		storage:        map[K]E{},
+		storage: map[K]E{},
 	}
 }
 
-type SimpleHashmap[K id.IDType, E id.Identity[K]] struct {
-	*id.SimpleIdentity[K]
+type SimpleHashmap[K comparable, E comparable] struct {
 	mutex   sync.Mutex
 	storage map[K]E
 }
@@ -55,7 +52,7 @@ func (s *SimpleHashmap[K, E]) RemoveById(id K) error {
 }
 
 // Add implements collection.Collection.
-func (s *SimpleHashmap[K, E]) Add(e E) error {
+func (s *SimpleHashmap[K, E]) Add(id K, e E) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -63,7 +60,7 @@ func (s *SimpleHashmap[K, E]) Add(e E) error {
 		return fmt.Errorf(cl.ErrElementExists)
 	}
 
-	s.storage[e.Id()] = e
+	s.storage[id] = e
 	return nil
 }
 
@@ -87,12 +84,23 @@ func (s *SimpleHashmap[K, E]) Elements() []E {
 
 // HasElement implements collection.Collection.
 func (s *SimpleHashmap[K, E]) HasElement(e E) bool {
-	return s.HasElementById(e.Id())
+	for _, element := range s.storage {
+		if e == element {
+			return true
+		}
+	}
+	return false
 }
 
 // Remove implements collection.Collection.
 func (s *SimpleHashmap[K, E]) Remove(e E) error {
-	return s.RemoveById(e.Id())
+	for id, element := range s.storage {
+		if e == element {
+			delete(s.storage, id)
+			return nil
+		}
+	}
+	return fmt.Errorf(cl.ErrElementNotFound)
 }
 
 // Size implements collection.Collection.
