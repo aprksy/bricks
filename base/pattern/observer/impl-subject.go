@@ -4,23 +4,20 @@ import (
 	"fmt"
 	"sync"
 
-	id "github.com/aprksy/bricks/base/identity"
 	"github.com/aprksy/bricks/base/utils"
 )
 
-var _ Subject[uint, int] = (*SimpleSubject[uint, int])(nil)
+var _ Subject[int, int] = (*SimpleSubject[int, int])(nil)
 
-func NewSimpleSubject[I id.IDType, T comparable](oid I, key string, value T) *SimpleSubject[I, T] {
+func NewSimpleSubject[I comparable, T comparable](oid I, key string, value T) *SimpleSubject[I, T] {
 	return &SimpleSubject[I, T]{
-		Identity:    id.NewSimpleIdentity(oid, "simple-subject", nil),
 		key:         key,
 		value:       value,
 		subscribers: map[string]Observer[I, T]{},
 	}
 }
 
-type SimpleSubject[I id.IDType, T comparable] struct {
-	id.Identity[I]
+type SimpleSubject[I comparable, T comparable] struct {
 	mutex       sync.Mutex
 	key         string
 	value       T
