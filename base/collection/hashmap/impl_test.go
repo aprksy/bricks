@@ -41,17 +41,22 @@ func TestAdd(t *testing.T) {
 	}
 
 	instance := hashmap.NewSimpleHashmap[int, int]()
+
+	assert.Panicsf(t, func() { instance.Add(1) }, "not implemented", "call to instance.Add() should cause panic")
+
 	for i, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := instance.Add(tc.oid, tc.oid)
+			err := instance.AddWithId(tc.oid, tc.oid)
 			switch i {
 			case 0, 1:
+				size, _ := instance.Size()
 				assert.Nil(t, err, "err should be nil")
-				assert.Equal(t, instance.Size(), tc.count, fmt.Sprintf("instance.Size() should equal %d", tc.count))
+				assert.Equal(t, tc.count, size, fmt.Sprintf("instance.Size() should equal %d", tc.count))
 			default:
+				size, _ := instance.Size()
 				assert.NotNil(t, err, "err should not be nil")
 				assert.EqualError(t, err, collection.ErrElementExists, fmt.Sprintf("err should equal '%s'", tc.err.Error()))
-				assert.Equal(t, tc.count, instance.Size(), fmt.Sprintf("instance.Size() should equal %d", tc.count))
+				assert.Equal(t, tc.count, size, fmt.Sprintf("instance.Size() should equal %d", tc.count))
 			}
 		})
 	}
@@ -73,7 +78,7 @@ func TestElement(t *testing.T) {
 		if i == 2 {
 			break
 		}
-		instance.Add(tc.oid, tc.oid)
+		instance.AddWithId(tc.oid, tc.oid)
 	}
 
 	for i, tc := range testCases {
@@ -110,12 +115,34 @@ func TestRemove(t *testing.T) {
 		if i == 2 {
 			break
 		}
-		instance.Add(tc.oid, tc.oid)
+		instance.AddWithId(tc.oid, tc.oid)
 	}
 
 	for i, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := instance.Remove(elements[i])
+			switch i {
+			case 0, 1:
+				assert.Nil(t, err, "err should be nil")
+			default:
+				assert.NotNil(t, err, "err should not be nil")
+				assert.EqualError(t, err, collection.ErrElementNotFound, fmt.Sprintf("err should equal '%s'", tc.err.Error()))
+			}
+		})
+	}
+
+	elements = []int{}
+	for i, tc := range testCases {
+		elements = append(elements, tc.oid)
+		if i == 2 {
+			break
+		}
+		instance.AddWithId(tc.oid, tc.oid)
+	}
+
+	for i, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := instance.RemoveById(tc.oid)
 			switch i {
 			case 0, 1:
 				assert.Nil(t, err, "err should be nil")
@@ -139,14 +166,16 @@ func TestClear(t *testing.T) {
 
 	instance := hashmap.NewSimpleHashmap[int, int]()
 	for _, tc := range testCases {
-		instance.Add(tc.oid, tc.oid)
+		instance.AddWithId(tc.oid, tc.oid)
 	}
 
 	t.Run("clear", func(t *testing.T) {
 		err := instance.Clear()
+		size, _ := instance.Size()
+		elements, _ := instance.Elements()
 		assert.Nil(t, err, "err should be nil")
-		assert.Zero(t, instance.Size(), "Size() should be 0")
-		assert.Empty(t, instance.Elements(), "Elements() should be empty")
+		assert.Zero(t, size, "Size() should be 0")
+		assert.Empty(t, elements, "Elements() should be empty")
 	})
 }
 
@@ -169,17 +198,19 @@ func TestElements(t *testing.T) {
 		if i == 3 {
 			break
 		}
-		instance.Add(tc.oid, tc.oid)
+		instance.AddWithId(tc.oid, tc.oid)
 	}
 
 	t.Run("elements", func(t *testing.T) {
-		elems := instance.Elements()
+		elems, _ := instance.Elements()
+		size, _ := instance.Size()
 		assert.NotNil(t, elems, "Elements() should not be nil")
-		assert.Equal(t, instance.Size(), len(elems), "Size() should equal len(elems)")
+		assert.Equal(t, size, len(elems), "Size() should equal len(elems)")
 
 		instance.Remove(elements[0])
-		elems = instance.Elements()
-		assert.Equal(t, instance.Size(), len(elems), "Size() should equal len(elems)")
+		elems, _ = instance.Elements()
+		size, _ = instance.Size()
+		assert.Equal(t, size, len(elems), "Size() should equal len(elems)")
 
 		el, err := instance.Element(1)
 		assert.EqualErrorf(t, err, collection.ErrElementNotFound, fmt.Sprintf("err should equal %s", collection.ErrElementNotFound))

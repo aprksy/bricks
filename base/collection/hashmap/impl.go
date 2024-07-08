@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	_ cl.Collection[int, string] = (*SimpleHashmap[int, string])(nil)
-	_ Hashmap[int, string]       = (*SimpleHashmap[int, string])(nil)
+	_ cl.Collection[int, string]       = (*SimpleHashmap[int, string])(nil)
+	_ cl.CollectionWithId[int, string] = (*SimpleHashmap[int, string])(nil)
 )
 
 func NewSimpleHashmap[K comparable, E comparable]() *SimpleHashmap[K, E] {
@@ -33,9 +33,9 @@ func (s *SimpleHashmap[K, E]) Element(id K) (*E, error) {
 }
 
 // HasElementById implements Hashmap.
-func (s *SimpleHashmap[K, E]) HasElementById(id K) bool {
+func (s *SimpleHashmap[K, E]) HasElementById(id K) (bool, error) {
 	_, exists := s.storage[id]
-	return exists
+	return exists, nil
 }
 
 // RemoveById implements Hashmap.
@@ -43,7 +43,7 @@ func (s *SimpleHashmap[K, E]) RemoveById(id K) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	if !s.HasElementById(id) {
+	if hasElement, _ := s.HasElementById(id); !hasElement {
 		return fmt.Errorf(cl.ErrElementNotFound)
 	}
 
@@ -52,11 +52,16 @@ func (s *SimpleHashmap[K, E]) RemoveById(id K) error {
 }
 
 // Add implements collection.Collection.
-func (s *SimpleHashmap[K, E]) Add(id K, e E) error {
+func (s *SimpleHashmap[K, E]) Add(e E) error {
+	panic("not implemented")
+}
+
+// AddWithId implements collection.Collection.
+func (s *SimpleHashmap[K, E]) AddWithId(id K, e E) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	if s.HasElement(e) {
+	if hasElement, _ := s.HasElement(e); hasElement {
 		return fmt.Errorf(cl.ErrElementExists)
 	}
 
@@ -74,22 +79,22 @@ func (s *SimpleHashmap[K, E]) Clear() error {
 }
 
 // Elements implements collection.Collection.
-func (s *SimpleHashmap[K, E]) Elements() []E {
+func (s *SimpleHashmap[K, E]) Elements() ([]E, error) {
 	result := []E{}
 	for _, e := range s.storage {
 		result = append(result, e)
 	}
-	return result
+	return result, nil
 }
 
 // HasElement implements collection.Collection.
-func (s *SimpleHashmap[K, E]) HasElement(e E) bool {
+func (s *SimpleHashmap[K, E]) HasElement(e E) (bool, error) {
 	for _, element := range s.storage {
 		if e == element {
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
 
 // Remove implements collection.Collection.
@@ -104,6 +109,6 @@ func (s *SimpleHashmap[K, E]) Remove(e E) error {
 }
 
 // Size implements collection.Collection.
-func (s *SimpleHashmap[K, E]) Size() int {
-	return len(s.storage)
+func (s *SimpleHashmap[K, E]) Size() (int, error) {
+	return len(s.storage), nil
 }
