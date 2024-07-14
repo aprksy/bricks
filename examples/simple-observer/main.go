@@ -17,7 +17,7 @@ type TimeDisplay struct {
 }
 
 func print(key string, value time.Time) {
-	fmt.Printf("%s: %v\n", key, value)
+	fmt.Printf("%s: %s\n", key, value.Format("2006-01-02 15:04:05"))
 }
 
 func main() {
