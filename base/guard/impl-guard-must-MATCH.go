@@ -5,24 +5,24 @@ import (
 	"regexp"
 )
 
-var _ Guard[string] = (*SimpleStrPatternGuard)(nil)
+var _ Guard[string] = (*SimpleGuardMatch)(nil)
 
-func NewSimpleStrPatternGuard(reference ReferenceGetter[string]) (*SimpleStrPatternGuard, error) {
+func NewSimpleStrPatternGuard(reference ReferenceGetter[string]) (*SimpleGuardMatch, error) {
 	if reference == nil {
 		return nil, fmt.Errorf(ErrRefProviderNil)
 	}
 
-	return &SimpleStrPatternGuard{
+	return &SimpleGuardMatch{
 		reference: reference,
 	}, nil
 }
 
-type SimpleStrPatternGuard struct {
+type SimpleGuardMatch struct {
 	reference ReferenceGetter[string]
 }
 
 // Evaluate implements Guard.
-func (s *SimpleStrPatternGuard) Evaluate(actnCtx string, value string) (bool, error) {
+func (s *SimpleGuardMatch) Evaluate(actnCtx string, value string) (bool, error) {
 	ref, err := s.reference.Get(actnCtx)
 
 	if err == nil && *ref > value {

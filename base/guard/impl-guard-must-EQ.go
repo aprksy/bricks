@@ -1,27 +1,28 @@
 package guard
 
 import (
+	"cmp"
 	"fmt"
 )
 
-var _ Guard[bool] = (*SimpleFlagGuard)(nil)
+var _ Guard[bool] = (*SimpleGuardEQ[bool])(nil)
 
-func NewSimpleFlagGuard(reference ReferenceGetter[bool]) (*SimpleFlagGuard, error) {
+func NewSimpleGuardEQ[T bool | cmp.Ordered](reference ReferenceGetter[bool]) (*SimpleGuardEQ[T], error) {
 	if reference == nil {
 		return nil, fmt.Errorf(ErrRefProviderNil)
 	}
 
-	return &SimpleFlagGuard{
+	return &SimpleGuardEQ[T]{
 		reference: reference,
 	}, nil
 }
 
-type SimpleFlagGuard struct {
+type SimpleGuardEQ[T bool | cmp.Ordered] struct {
 	reference ReferenceGetter[bool]
 }
 
 // Evaluate implements Guard.
-func (s *SimpleFlagGuard) Evaluate(actnCtx string, value bool) (bool, error) {
+func (s *SimpleGuardEQ[T]) Evaluate(actnCtx string, value bool) (bool, error) {
 	ref, err := s.reference.Get(actnCtx)
 
 	if err == nil && *ref != value {
