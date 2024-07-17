@@ -7,27 +7,51 @@ import (
 
 var _ Guard[int] = (*SimpleGuardLE[int])(nil)
 
-func NewSimpleGuardLE[T cmp.Ordered](reference ReferenceGetter[T]) (*SimpleGuardLE[T], error) {
-	if reference == nil {
-		return nil, fmt.Errorf(ErrRefProviderNil)
+func NewSimpleGuardLE[T cmp.Ordered](id string, reference ReferenceGetter[T]) SimpleGuardLE[T] {
+	return SimpleGuardLE[T]{
+		SimpleGuardBase: NewSimpleGuardBase[T](id, reference),
 	}
-
-	return &SimpleGuardLE[T]{
-		reference: reference,
-	}, nil
 }
 
 type SimpleGuardLE[T cmp.Ordered] struct {
-	reference ReferenceGetter[T]
+	SimpleGuardBase[T]
 }
 
 // Evaluate implements Guard.
-func (s *SimpleGuardLE[T]) Evaluate(actnCtx string, value T) (bool, error) {
-	ref, err := s.reference.Get(actnCtx)
+func (s *SimpleGuardLE[T]) Evaluate(value T) bool {
+	ref, err := s.reference.Get(s.id)
 
-	if err == nil && *ref < value {
-		return false, fmt.Errorf("%s: %s", actnCtx, ErrValueOutOfRange)
+	if err != nil {
+		return true
+	}
+
+	if !(value <= *ref) {
+		return false
+	}
+
+	return true
+}
+
+// Evaluate implements Guard.
+func (s *SimpleGuardLE[T]) EvaluateWithErr(value T) (bool, error) {
+	ref, err := s.reference.Get(s.id)
+
+	if err != nil {
+		return true, nil
+	}
+
+	if !(value <= *ref) {
+		return false, fmt.Errorf("%s: %s", s.id, ErrRefValueNotLE)
 	}
 
 	return true, nil
+}
+
+// GetConstraint implements Guard.
+func (s *SimpleGuardLE[T]) GetConstraint() (map[string]T, error) {
+	ref, err := s.reference.Get(s.id)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]T{s.id: *ref}, nil
 }

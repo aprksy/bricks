@@ -7,26 +7,42 @@ import (
 
 var _ Guard[string] = (*SimpleGuardMatch)(nil)
 
-func NewSimpleStrPatternGuard(reference ReferenceGetter[string]) (*SimpleGuardMatch, error) {
-	if reference == nil {
-		return nil, fmt.Errorf(ErrRefProviderNil)
+func NewSimpleGuardMatch(id string, reference ReferenceGetter[string]) SimpleGuardMatch {
+	return SimpleGuardMatch{
+		SimpleGuardBase: NewSimpleGuardBase[string](id, reference),
 	}
-
-	return &SimpleGuardMatch{
-		reference: reference,
-	}, nil
 }
 
 type SimpleGuardMatch struct {
-	reference ReferenceGetter[string]
+	SimpleGuardBase[string]
 }
 
 // Evaluate implements Guard.
-func (s *SimpleGuardMatch) Evaluate(actnCtx string, value string) (bool, error) {
-	ref, err := s.reference.Get(actnCtx)
+func (s *SimpleGuardMatch) Evaluate(value string) bool {
+	ref, err := s.reference.Get(s.id)
 
-	if err == nil && *ref > value {
-		return false, fmt.Errorf("%s: %s", actnCtx, ErrRefValueNotFound)
+	if err != nil {
+		return true
+	}
+
+	match, err := regexp.MatchString(*ref, value)
+	if err != nil {
+		return false
+	}
+
+	if !match {
+		return false
+	}
+
+	return true
+}
+
+// EvaluateWithErr implements Guard.
+func (s *SimpleGuardMatch) EvaluateWithErr(value string) (bool, error) {
+	ref, err := s.reference.Get(s.id)
+
+	if err != nil {
+		return true, nil
 	}
 
 	match, err := regexp.MatchString(*ref, value)
@@ -35,8 +51,17 @@ func (s *SimpleGuardMatch) Evaluate(actnCtx string, value string) (bool, error) 
 	}
 
 	if !match {
-		return false, fmt.Errorf("%s: %s", actnCtx, ErrValueNotMatch)
+		return false, fmt.Errorf("%s: %s", s.id, ErrValueNotMatch)
 	}
 
 	return true, nil
+}
+
+// GetConstraint implements Guard.
+func (s *SimpleGuardMatch) GetConstraint() (map[string]string, error) {
+	ref, err := s.reference.Get(s.id)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]string{s.id: *ref}, nil
 }
