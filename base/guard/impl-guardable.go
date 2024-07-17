@@ -21,6 +21,16 @@ type SimpleGuardable[T bool | cmp.Ordered] struct {
 }
 
 // Allow implements Guardable.
-func (s *SimpleGuardable[T]) Allow(actnCtx string, value T) (bool, error) {
-	return s.guard.Evaluate(actnCtx, value)
+func (s *SimpleGuardable[T]) Allow(value T) bool {
+	return s.guard.Evaluate(value)
+}
+
+// Allow implements Guardable.
+func (s *SimpleGuardable[T]) AllowWithErr(value T) (bool, error) {
+	return s.guard.EvaluateWithErr(value)
+}
+
+// GetConstraint implements Guardable.
+func (s *SimpleGuardable[T]) GetConstraint() (map[string]T, error) {
+	return s.guard.GetConstraint()
 }
