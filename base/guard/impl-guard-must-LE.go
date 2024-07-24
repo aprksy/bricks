@@ -19,8 +19,11 @@ type SimpleGuardLE[T cmp.Ordered] struct {
 
 // Evaluate implements Guard.
 func (s *SimpleGuardLE[T]) Evaluate(value T) bool {
-	ref, err := s.reference.Get(s.id)
+	if s.reference == nil {
+		return true
+	}
 
+	ref, err := s.reference.Get(s.id)
 	if err != nil {
 		return true
 	}
@@ -34,8 +37,11 @@ func (s *SimpleGuardLE[T]) Evaluate(value T) bool {
 
 // Evaluate implements Guard.
 func (s *SimpleGuardLE[T]) EvaluateWithErr(value T) (bool, error) {
-	ref, err := s.reference.Get(s.id)
+	if s.reference == nil {
+		return true, nil
+	}
 
+	ref, err := s.reference.Get(s.id)
 	if err != nil {
 		return true, nil
 	}
@@ -49,6 +55,10 @@ func (s *SimpleGuardLE[T]) EvaluateWithErr(value T) (bool, error) {
 
 // GetConstraint implements Guard.
 func (s *SimpleGuardLE[T]) GetConstraint() (map[string]T, error) {
+	if s.reference == nil {
+		return nil, fmt.Errorf(ErrRefNotSet)
+	}
+
 	ref, err := s.reference.Get(s.id)
 	if err != nil {
 		return nil, err

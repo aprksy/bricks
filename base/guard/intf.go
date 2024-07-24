@@ -28,8 +28,6 @@ type CompoundGuard[T bool | cmp.Ordered] interface {
 
 type CustomCompoundGuard[T bool | cmp.Ordered] interface {
 	CompoundGuard[T]
-	HasOnEvaluate() bool
-	HasOnEvaluateWithErr() bool
 	SetOnEvaluate(evalFunc func(value T) bool)
 	SetOnEvaluateWithErr(evalFunc func(value T) (bool, error))
 	SetOnGetConstraint(getConstraint func() (map[string]T, error))

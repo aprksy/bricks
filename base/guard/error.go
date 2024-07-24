@@ -2,6 +2,7 @@ package guard
 
 const (
 	ErrRefProviderNil   = "reference provider is nil"
+	ErrRefNotSet        = "reference not set"
 	ErrRefValueNotFound = "reference value not found"
 	ErrRefValueNotEQ    = "evaluated value not equal to reference"
 	ErrRefValueNotNE    = "evaluated value equal to reference"
