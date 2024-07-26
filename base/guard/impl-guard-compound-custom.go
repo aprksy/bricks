@@ -61,11 +61,3 @@ func (s *SimpleCustomCompoundGuard[T]) SetOnEvaluateWithErr(evalFunc func(value 
 func (s *SimpleCustomCompoundGuard[T]) SetOnGetConstraint(getConstraint func() (map[string]T, error)) {
 	s.onGetConstraint = getConstraint
 }
-
-func (s *SimpleCustomCompoundGuard[T]) HasOnEvaluate() bool {
-	return s.onEval != nil
-}
-
-func (s *SimpleCustomCompoundGuard[T]) HasOnEvaluateWithErr() bool {
-	return s.onEvalWithErr != nil
-}

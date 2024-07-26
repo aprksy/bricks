@@ -19,8 +19,11 @@ type SimpleGuardMatch struct {
 
 // Evaluate implements Guard.
 func (s *SimpleGuardMatch) Evaluate(value string) bool {
-	ref, err := s.reference.Get(s.id)
+	if s.reference == nil {
+		return true
+	}
 
+	ref, err := s.reference.Get(s.id)
 	if err != nil {
 		return true
 	}
@@ -39,8 +42,11 @@ func (s *SimpleGuardMatch) Evaluate(value string) bool {
 
 // EvaluateWithErr implements Guard.
 func (s *SimpleGuardMatch) EvaluateWithErr(value string) (bool, error) {
-	ref, err := s.reference.Get(s.id)
+	if s.reference == nil {
+		return true, nil
+	}
 
+	ref, err := s.reference.Get(s.id)
 	if err != nil {
 		return true, nil
 	}
@@ -59,6 +65,10 @@ func (s *SimpleGuardMatch) EvaluateWithErr(value string) (bool, error) {
 
 // GetConstraint implements Guard.
 func (s *SimpleGuardMatch) GetConstraint() (map[string]string, error) {
+	if s.reference == nil {
+		return nil, fmt.Errorf(ErrRefNotSet)
+	}
+
 	ref, err := s.reference.Get(s.id)
 	if err != nil {
 		return nil, err
